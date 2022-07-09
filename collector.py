@@ -2,7 +2,7 @@
 This program finds and downloads a dataset of public repositories in Git through a process of finding popular
 repositories that are found with a random word.
 """
-
+import configparser
 import datetime
 import io
 
@@ -10,13 +10,16 @@ import requests
 import zipfile
 import time
 
+# Defaults. Set in config.ini
 number_of_repos_per_word = 10
 number_of_repos_wanted = 100
 random_words = []
-directory = "C:/Sources"
+directory = "C:/"
+token = ""
 
 
 def main():
+    read_config_file()
     start_time = time.time()
     print("***** GETTING %d REPOS *****" % number_of_repos_wanted)
     print("Target directory is %s" % directory)
@@ -27,6 +30,27 @@ def main():
     end_time = time.time()
     print("Download completed. Total time taken is %s" % str(datetime.timedelta(seconds=(end_time - start_time))))
     print("***** FINISHED GETTING REPOS *****")
+
+
+def read_config_file():
+    """
+    Gets the values from config.ini and fills them into the global variables
+    """
+    config = configparser.ConfigParser()
+    config.sections()
+    config.read('config.ini')
+    if 'github.com' in config:
+        global token
+        token = config['github.com']['token']
+    if 'repositories' in config:
+        global number_of_repos_wanted
+        number_of_repos_wanted = int(config['repositories']['number_of_repos_wanted'])
+
+        global number_of_repos_per_word
+        number_of_repos_per_word = int(config['repositories']['number_of_repos_per_word'])
+
+        global directory
+        directory = config['repositories']['directory']
 
 
 def get_repos():
@@ -142,7 +166,7 @@ def download_repo(repo):
     print("Creating %s" % repo)
     try:
         repo = requests.get("https://api.github.com/repos/%s/zipball" % repo,
-                            headers={"Authorization": "token $token"},
+                            headers={"Authorization": "token %s" % token},
                             stream=True)
         zip = zipfile.ZipFile(io.BytesIO(repo.content))
         zip.extractall(directory)
