@@ -142,7 +142,7 @@ def download_repo(repo):
     print("Creating %s" % repo)
     try:
         repo = requests.get("https://api.github.com/repos/%s/zipball" % repo,
-                            headers={"Authorization": "token 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"},
+                            headers={"Authorization": "token $token"},
                             stream=True)
         zip = zipfile.ZipFile(io.BytesIO(repo.content))
         zip.extractall(directory)
